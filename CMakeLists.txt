@@ -33,6 +33,8 @@ target_include_directories(OnlineStatistics PUBLIC "inc")
 # This allows to include files relative to the root of the src directory with a <> pair
 
 find_package(Catch2 3 REQUIRED)
+include(CTest)
+include(Catch)
 
 SET(sources_test
     tests/TestOnlineStatistics.cpp
@@ -42,3 +44,4 @@ add_executable(tests ${sources_test})
 
 target_link_libraries(tests PRIVATE OnlineStatistics Catch2::Catch2WithMain)
 
+# catch_discover_tests(tests)

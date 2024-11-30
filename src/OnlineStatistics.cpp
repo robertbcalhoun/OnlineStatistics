@@ -11,6 +11,7 @@
 
 #include "OnlineStatistics.h"
 #include <math.h>
+#include <limits>
 
 
 /*** OnlineStatistics1D ***/
@@ -42,6 +43,9 @@ double OnlineStatistics1D::Count(void) {
 }
 
 double OnlineStatistics1D::Mean(void) {
+    if (count < 1) {
+        return NAN;
+    }
     return mean;
 }
 

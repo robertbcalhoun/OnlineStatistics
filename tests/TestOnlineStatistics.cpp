@@ -7,13 +7,13 @@
 
 // uses catch2
 #include <catch2/catch_all.hpp>
+//#include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "OnlineStatistics.h"
 
 
 int Add( int a, int b ) {
     return a + b;
 }
-
 
 TEST_CASE( "Addition", "[basic]" ) {
     REQUIRE( Add(1,0) == 1 );
@@ -22,15 +22,35 @@ TEST_CASE( "Addition", "[basic]" ) {
     REQUIRE( Add(236,1) == 237 );
 }
 
+// just Approx() does not work
+TEST_CASE("Approximate Match", "[approx]") {
+    REQUIRE( 1.0 == Catch::Approx(1.000000000001));
+}
+
+TEST_CASE("No data", "[onlinestatics1d]") {
+    auto stats = OnlineStatistics1D();
+    REQUIRE_THAT(stats.Mean(), Catch::Matchers::IsNaN());
+    REQUIRE_THAT(stats.Variance(), Catch::Matchers::IsNaN());
+    REQUIRE_THAT(stats.SampleVariance(), Catch::Matchers::IsNaN());
+}
+
+TEST_CASE("Insufficient data", "[onlinestatics1d]") {
+    auto stats = OnlineStatistics1D();
+    stats.Update(0.0);
+    REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(0.0));
+    REQUIRE_THAT(stats.Variance(), Catch::Matchers::IsNaN());
+    REQUIRE_THAT(stats.SampleVariance(), Catch::Matchers::IsNaN());
+}
+
 TEST_CASE("Short array of doubles", "[onlinestatics1d]") {
     std::array<double, 5> list = {1.0, 2.0, 3.0, 4.0, 5.0};
     auto stats = OnlineStatistics1D();
     for (auto& x : list) {
         stats.Update(x);
     }
-    REQUIRE( stats.Mean() == 3.0) ;
-    REQUIRE( stats.Variance() == 2.0);
-    REQUIRE( stats.SampleVariance() == 2.5 );
+    REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(3.0));
+    REQUIRE_THAT(stats.Variance(), Catch::Matchers::WithinRel(2.0));
+    REQUIRE_THAT(stats.SampleVariance(), Catch::Matchers::WithinRel(2.5));
 }
 
 TEST_CASE("Longer array of doubles", "[onlinestatics1d]") {
@@ -42,9 +62,8 @@ TEST_CASE("Longer array of doubles", "[onlinestatics1d]") {
     for (auto& x : list) {
         stats.Update(x);
     }
-    REQUIRE( Add(1,0) == 1 );
-    REQUIRE( stats.Mean() == 46.84375) ;
-    REQUIRE( stats.Variance() == 796.4443359375);
-    REQUIRE( stats.SampleVariance() == 822.1360887096774 );
+    REQUIRE(Add(1,0) == 1);
+    REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(46.84375)) ;
+    REQUIRE_THAT(stats.Variance(), Catch::Matchers::WithinRel(796.4443359375));
+    REQUIRE_THAT(stats.SampleVariance(), Catch::Matchers::WithinRel(822.1360887096774));
 }
-
