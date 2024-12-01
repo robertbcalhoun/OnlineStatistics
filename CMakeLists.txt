@@ -9,7 +9,8 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 set(CMAKE_C_STANDARD                99)
-# use C++23 so as to allow us to use <format>
+# use C++23 so as to allow use of <format> and <zip> in tests.
+# OnlineStatistics itself only .
 set(CMAKE_CXX_STANDARD              23)
 
 # Make the standard a requirement => prevent fallback to previous
@@ -31,17 +32,13 @@ add_library(OnlineStatistics ${sources})
 target_include_directories(OnlineStatistics PUBLIC "inc")
 
 # This allows to include files relative to the root of the src directory with a <> pair
-
 find_package(Catch2 3 REQUIRED)
-include(CTest)
-include(Catch)
 
-SET(sources_test
-    tests/TestOnlineStatistics.cpp
-)
-
+# test
+SET(sources_test tests/TestOnlineStatistics.cpp)
 add_executable(tests ${sources_test})
-
 target_link_libraries(tests PRIVATE OnlineStatistics Catch2::Catch2WithMain)
 
-# catch_discover_tests(tests)
+# example
+add_executable(example examples/example.cpp inc/OnlineStatistics.h)
+target_link_libraries(example PRIVATE OnlineStatistics)
