@@ -19,8 +19,15 @@ bool printit(double x) {
 };
 
 int main() {
+    OnlineStatistics1D stats = OnlineStatistics1D();
+    stats.Update(1.0);
+    stats.Update(2.0);
+    stats.Update(3.0);
+    std::cout << std::format("mean: {:.5f}, variance: {:.5f}\n", stats.Mean(), stats.Variance());
+    
+    // reset statistics
+    stats = OnlineStatistics1D();
     int iters = 30;
-    auto stats = OnlineStatistics1D();
     stats.Update(1.0);
     printit(stats.Mean());
     for (int i=0; i<iters; i++) {
@@ -49,5 +56,6 @@ int main() {
         const auto [slope, intercept] = bestfit(stats2d);
         std::cout << std::format("update ({:4d}, {:4.6f}), mean={:8.6f}, y = {:8.6f} x + {:8.6f}\n", i, newval, stats2d.MeanY(), slope, intercept);
     }
+
     exit(0);
 }
