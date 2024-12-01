@@ -25,12 +25,10 @@
 class OnlineStatistics1D {
 private:
     double count;
-    double max_count;
     double mean;
     double m2;
 public:
     OnlineStatistics1D();
-    OnlineStatistics1D(int windowSize);
     virtual ~OnlineStatistics1D(void);
     int Update(double value);
     double Count(void);
@@ -42,15 +40,13 @@ public:
 class OnlineStatistics2D {
 private:
     double count;
-    double max_count;
     double x_mean;
     double y_mean;
     double m2x;
     double m2y;
     double mxy;
 public:
-    OnlineStatistics2D() : OnlineStatistics2D(-1){};
-    OnlineStatistics2D(int windowSize);
+    OnlineStatistics2D();
     virtual ~OnlineStatistics2D(void);
     int Update(double x_value, double y_value);
     double Count(void);
@@ -61,9 +57,7 @@ public:
     double SampleVarianceX(void);
     double SampleVarianceY(void);
     double CovarianceXY(void);
-    double CovarianceYX(void);
     double SampleCovarianceXY(void);
-    double SampleCovarianceYX(void);
 };
 
 class StatisticResult1D {

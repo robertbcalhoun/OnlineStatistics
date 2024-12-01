@@ -199,7 +199,4 @@ np.polyfit(x,y,1)
     double beta0 = stats.MeanY() - beta1 * stats.MeanX();
     REQUIRE_THAT(beta0, Catch::Matchers::WithinRel( 0.61811353,1e-6));
     REQUIRE_THAT(beta1, Catch::Matchers::WithinRel(-0.15846587,1e-6));
-
 }
-
-
