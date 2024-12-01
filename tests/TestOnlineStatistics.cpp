@@ -146,6 +146,7 @@ m=np.array([x,y])
 m[0].mean(), m[1].mean()
 m[0].var(), m[1].var(), m[0].var(ddof=1), m[1].var(ddof=1)
 np.cov(m, bias=True)[0][1], np.cov(m, bias=False)[0][1]
+np.polyfit(x,y,1)
 */
 
     REQUIRE_THAT(stats.MeanX(), Catch::Matchers::WithinRel(3.0));
@@ -156,6 +157,12 @@ np.cov(m, bias=True)[0][1], np.cov(m, bias=False)[0][1]
     REQUIRE_THAT(stats.SampleVarianceY(), Catch::Matchers::WithinRel(10.212100981900099));
     REQUIRE_THAT(stats.CovarianceXY(), Catch::Matchers::WithinRel(4.040019996));
     REQUIRE_THAT(stats.SampleCovarianceXY(), Catch::Matchers::WithinRel(5.050024994999999));
+
+
+    double beta1 = stats.CovarianceXY() / stats.VarianceX();
+    double beta0 = stats.MeanY() - beta1 * stats.MeanX();
+    REQUIRE_THAT(beta0, Catch::Matchers::WithinRel(-0.08001,1e-6));
+    REQUIRE_THAT(beta1, Catch::Matchers::WithinRel( 2.02001,1e-6)); 
 }
 
 TEST_CASE("Random floats", "[onlinestatics2d]") {
@@ -175,6 +182,7 @@ m=np.array([x,y])
 m[0].mean(), m[1].mean()
 m[0].var(), m[1].var(), m[0].var(ddof=1), m[1].var(ddof=1)
 np.cov(m, bias=True)[0][1], np.cov(m, bias=False)[0][1]
+np.polyfit(x,y,1)
 */
     REQUIRE_THAT(stats.MeanX(), Catch::Matchers::WithinRel(0.63067953384375));
     REQUIRE_THAT(stats.MeanY(), Catch::Matchers::WithinRel(0.5181723493375));
@@ -184,6 +192,12 @@ np.cov(m, bias=True)[0][1], np.cov(m, bias=False)[0][1]
     REQUIRE_THAT(stats.SampleVarianceY(), Catch::Matchers::WithinRel(0.08019020777153293));
     REQUIRE_THAT(stats.CovarianceXY(), Catch::Matchers::WithinRel(-0.010529283576359396));
     REQUIRE_THAT(stats.SampleCovarianceXY(), Catch::Matchers::WithinRel(-0.011231235814783356));
+
+    double beta1 = stats.CovarianceXY() / stats.VarianceX();
+    double beta0 = stats.MeanY() - beta1 * stats.MeanX();
+    REQUIRE_THAT(beta0, Catch::Matchers::WithinRel( 0.61811353,1e-6));
+    REQUIRE_THAT(beta1, Catch::Matchers::WithinRel(-0.15846587,1e-6));
+
 }
 
 

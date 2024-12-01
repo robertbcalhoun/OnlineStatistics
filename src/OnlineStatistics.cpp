@@ -1,10 +1,7 @@
 /* OnlineStatistics.cpp
 **
-** Classes to compute the running mean, variance and covariance of a distribution
-** using the online Welford algorithm as presented in 
-** https://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
-**
-** Implementation by Robert B. Calhoun <rcalhoun@shotspotter.com>
+** (c) 2024 SoundThinking, Inc 
+** Robert B. Calhoun <rcalhoun@shotspotter.com>
 **
 ** SPDX short identifier: MIT
 */
