@@ -163,15 +163,3 @@ double OnlineStatistics2D::SampleCovarianceXY(void) {
         return mxy / (count - 1.0);
     }
 }
-
-
-/***********************/
-
-StatisticResult1D::StatisticResult1D(double mean, double variance, double sample_variance) {
-    Mean = mean;
-    Variance = variance;
-    SampleVariance = sample_variance;
-}
-
-StatisticResult1D::~StatisticResult1D(void) {
-}

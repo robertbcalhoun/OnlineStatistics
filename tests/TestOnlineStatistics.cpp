@@ -158,7 +158,9 @@ np.polyfit(x,y,1)
     REQUIRE_THAT(stats.CovarianceXY(), Catch::Matchers::WithinRel(4.040019996));
     REQUIRE_THAT(stats.SampleCovarianceXY(), Catch::Matchers::WithinRel(5.050024994999999));
 
-
+    // Perform linear regression following https://seehuhn.github.io/MATH3714/S01-simple.html
+    // Agreement with numpy linalg is a bit worse than other statistics.
+    // np.linalg.lstsq(np.vstack([x, np.ones(len(x))]).T,y)[0]
     double beta1 = stats.CovarianceXY() / stats.VarianceX();
     double beta0 = stats.MeanY() - beta1 * stats.MeanX();
     REQUIRE_THAT(beta0, Catch::Matchers::WithinRel(-0.08001,1e-6));

@@ -71,8 +71,6 @@ public:
     double Mean;
     double Variance;
     double SampleVariance;
-    StatisticResult1D(double mean, double variance, double sample_variance);
-    ~StatisticResult1D(void);
 };
 
 class StatisticResult2D {
@@ -84,10 +82,6 @@ public:
     double VarianceY;
     double SampleVarianceY;
 	double Covariance;
-    StatisticResult2D(double meanx, double variancex, double sample_variancex,
-					double meany, double variancey, double sample_variancey,
-					double covariance);
-    ~StatisticResult2D(void);
 };
 
 #endif /* INC_SUPPORT_ONLINESTATISTICS_H_ */
