@@ -45,22 +45,25 @@ double OnlineStatistics1D::Count(void) {
 double OnlineStatistics1D::Mean(void) {
     if (count < 1) {
         return NAN;
+    } else {
+        return mean;
     }
-    return mean;
 }
 
 double OnlineStatistics1D::Variance(void) {
     if (count < 2) {
         return NAN;
+    } else {
+        return m2 / count;
     }
-    return m2 / count;
 }
 
 double OnlineStatistics1D::SampleVariance(void) {
     if (count < 2) {
         return NAN;
+    } else {
+        return m2 / (count - 1.0);
     }
-    return m2 / (count - 1.0);
 }
 
 /*** OnlineStatistics2D ***/
@@ -73,8 +76,7 @@ OnlineStatistics2D::OnlineStatistics2D(int windowSize = -1) {
     y_mean = 0.0;
     m2x = 0.0;
     m2y = 0.0;
-    cx = 0.0;
-    cy = 0.0;
+    mxy = 0.0;
 }
 
 OnlineStatistics2D::~OnlineStatistics2D(void) {
@@ -83,16 +85,17 @@ OnlineStatistics2D::~OnlineStatistics2D(void) {
 int OnlineStatistics2D::Update(double x_value, double y_value) {
     if (max_count < 0 || count < max_count ) { ++count; }
     double deltax = x_value - x_mean;
-    double deltay = y_value - y_mean;
     x_mean += deltax / count;
-    y_mean += deltay / count;
     double deltax2 = x_value - x_mean;
+    
+    double deltay = y_value - y_mean;
+    y_mean += deltay / count;
     double deltay2 = y_value - y_mean;
+
+    mxy += deltax * deltay2;
     m2x += deltax * deltax2;
     m2y += deltay * deltay2;
-    // these two should be the same
-    cx += deltax2 * deltay;
-    cy += deltax * deltay2;
+
     return (int) count;
 }
 
@@ -101,68 +104,69 @@ double OnlineStatistics2D::Count(void) {
 }
 
 double OnlineStatistics2D::MeanX(void) {
-    return x_mean;
+    if (count < 1) {
+        return NAN;
+    } else {
+        return x_mean;
+    }
 }
 
 double OnlineStatistics2D::MeanY(void) {
-    return y_mean;
+    if (count < 1) {
+        return NAN;
+    } else {
+        return y_mean;
+    }
 }
 
 double OnlineStatistics2D::VarianceX(void) {
     if (count < 2) {
         return NAN;
+    } else {
+        return m2x / count;
     }
-    return m2x / count;
 }
 
 double OnlineStatistics2D::SampleVarianceX(void) {
     if (count < 2) {
         return NAN;
+    } else {
+        return m2x / (count - 1.0);
     }
-    return m2x / (count - 1.0);
 }
 
 double OnlineStatistics2D::VarianceY(void) {
     if (count < 2) {
         return NAN;
+    } else {
+        return m2y / count;
     }
-    return m2y / count;
 }
 
 double OnlineStatistics2D::SampleVarianceY(void) {
     if (count < 2) {
         return NAN;
+    } else {
+        return m2y / (count - 1.0);
     }
-    return m2y / (count - 1.0);
 }
 
 double OnlineStatistics2D::CovarianceXY(void) {
     if (count < 2) {
         return NAN;
+    } else {
+        return mxy / count;
     }
-    return cx / count;
-}
-
-double OnlineStatistics2D::CovarianceYX(void) {
-    if (count < 2) {
-        return NAN;
-    }
-    return cy / (count - 1.0);
 }
 
 double OnlineStatistics2D::SampleCovarianceXY(void) {
     if (count < 2) {
         return NAN;
+    } else {
+        return mxy / (count - 1.0);
     }
-    return cx / (count - 1.0);
 }
 
-double OnlineStatistics2D::SampleCovarianceYX(void) {
-    if (count < 2) {
-        return NAN;
-    }
-    return cy / count;
-}
 
 /***********************/
 

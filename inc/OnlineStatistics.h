@@ -42,8 +42,7 @@ private:
     double y_mean;
     double m2x;
     double m2y;
-    double cx;
-    double cy;
+    double mxy;
 public:
     OnlineStatistics2D() : OnlineStatistics2D(-1){};
     OnlineStatistics2D(int windowSize);

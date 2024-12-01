@@ -67,3 +67,123 @@ TEST_CASE("Longer array of doubles", "[onlinestatics1d]") {
     REQUIRE_THAT(stats.Variance(), Catch::Matchers::WithinRel(796.4443359375));
     REQUIRE_THAT(stats.SampleVariance(), Catch::Matchers::WithinRel(822.1360887096774));
 }
+
+
+TEST_CASE("Incremental stats", "[onlinestatics1d]") {
+    auto stats = OnlineStatistics1D();
+    stats.Update(1.0);
+    REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(1.0));
+    stats.Update(2.0);
+    REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(1.5));
+    stats.Update(3.0);
+    REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(2.0));
+    stats.Update(1e13 + 2.0);
+    REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(2.5e12 + 2.0));
+}
+
+/* OnlineStatistics2D */
+
+TEST_CASE("No data", "[onlinestatics2d]") {
+    auto stats = OnlineStatistics2D();
+    REQUIRE_THAT(stats.MeanX(), Catch::Matchers::IsNaN());
+    REQUIRE_THAT(stats.VarianceX(), Catch::Matchers::IsNaN());
+    REQUIRE_THAT(stats.SampleVarianceX(), Catch::Matchers::IsNaN());
+}
+
+TEST_CASE("Insufficient data", "[onlinestatics2d]") {
+    auto stats = OnlineStatistics2D();
+    stats.Update(0.0,0.0);
+    REQUIRE_THAT(stats.MeanX(), Catch::Matchers::WithinRel(0.0));
+    REQUIRE_THAT(stats.MeanY(), Catch::Matchers::WithinRel(0.0));
+    REQUIRE_THAT(stats.VarianceX(), Catch::Matchers::IsNaN());
+    REQUIRE_THAT(stats.VarianceY(), Catch::Matchers::IsNaN());
+    REQUIRE_THAT(stats.CovarianceXY(), Catch::Matchers::IsNaN());
+    REQUIRE_THAT(stats.SampleVarianceX(), Catch::Matchers::IsNaN());
+    REQUIRE_THAT(stats.SampleVarianceY(), Catch::Matchers::IsNaN());
+    REQUIRE_THAT(stats.SampleCovarianceXY(), Catch::Matchers::IsNaN());
+}
+
+TEST_CASE("Trivial covariance", "[onlinestatics2d]") {
+
+    auto stats = OnlineStatistics2D();
+    stats.Update(1.0, 2.0);
+    stats.Update(2.0, 4.0);
+    REQUIRE_THAT(stats.CovarianceXY(), Catch::Matchers::WithinRel(0.5));
+    REQUIRE_THAT(stats.SampleCovarianceXY(), Catch::Matchers::WithinRel(1.0));
+}
+
+TEST_CASE("Straight line", "[onlinestatics2d]") {
+    std::array<double, 5> list = {1.0, 2.0, 3.0, 4.0, 5.0};
+    auto stats = OnlineStatistics2D();
+    for (auto& x : list) {
+        stats.Update(x, x);
+    }
+    REQUIRE_THAT(stats.MeanX(), Catch::Matchers::WithinRel(3.0));
+    REQUIRE_THAT(stats.MeanY(), Catch::Matchers::WithinRel(3.0));
+    REQUIRE_THAT(stats.VarianceX(), Catch::Matchers::WithinRel(2.0));
+    REQUIRE_THAT(stats.VarianceY(), Catch::Matchers::WithinRel(2.0));
+    REQUIRE_THAT(stats.SampleVarianceX(), Catch::Matchers::WithinRel(2.5));
+    REQUIRE_THAT(stats.SampleVarianceY(), Catch::Matchers::WithinRel(2.5));
+    REQUIRE_THAT(stats.CovarianceXY(), Catch::Matchers::WithinRel(2.0));
+    REQUIRE_THAT(stats.SampleCovarianceXY(), Catch::Matchers::WithinRel(2.5));
+}
+
+
+TEST_CASE("Not quite straight line", "[onlinestatics2d]") {
+    std::array<double, 5> xvals = {1.0, 2.0, 3.0, 4.0, 5.0};
+    std::array<double, 5> yvals = {2.0, 3.8, 6.1, 8.0001, 9.99999999};
+    auto stats = OnlineStatistics2D();
+
+    // requires C++20 or maybe later
+    for (auto [x, y] : std::views::zip(xvals, yvals)) {
+        stats.Update(x, y);
+    }
+
+/* numpy
+x=[1.0, 2.0, 3.0, 4.0, 5.0]
+y=[2.0, 3.8, 6.1, 8.0001, 9.99999999]
+m=np.array([x,y])
+m[0].mean(), m[1].mean()
+m[0].var(), m[1].var(), m[0].var(ddof=1), m[1].var(ddof=1)
+np.cov(m, bias=True)[0][1], np.cov(m, bias=False)[0][1]
+*/
+
+    REQUIRE_THAT(stats.MeanX(), Catch::Matchers::WithinRel(3.0));
+    REQUIRE_THAT(stats.MeanY(), Catch::Matchers::WithinRel(5.9800199979999995));
+    REQUIRE_THAT(stats.VarianceX(), Catch::Matchers::WithinRel(2.0));
+    REQUIRE_THAT(stats.VarianceY(), Catch::Matchers::WithinRel(8.169680785520079));
+    REQUIRE_THAT(stats.SampleVarianceX(), Catch::Matchers::WithinRel(2.5));
+    REQUIRE_THAT(stats.SampleVarianceY(), Catch::Matchers::WithinRel(10.212100981900099));
+    REQUIRE_THAT(stats.CovarianceXY(), Catch::Matchers::WithinRel(4.040019996));
+    REQUIRE_THAT(stats.SampleCovarianceXY(), Catch::Matchers::WithinRel(5.050024994999999));
+}
+
+TEST_CASE("Random floats", "[onlinestatics2d]") {
+    std::array<double, 16> xvals = {0.5525571237, 0.5412206250, 0.8147993422, 0.1510378701, 0.0560028736, 0.3781311581, 0.5456549605, 0.7874939989, 0.9412896414, 0.8458607057, 0.4717614025, 0.8134554498, 0.8864944719, 0.7353193240, 0.9149073578, 0.6548862363};
+    std::array<double, 16> yvals = {0.6809272480, 0.7048653974, 0.4096884513, 0.5807519821, 0.3463499743, 0.4886715036, 0.8816185354, 0.0855490408, 0.7777406078, 0.0800553042, 0.7257813523, 0.4143589239, 0.8589390266, 0.1811071473, 0.1962093466, 0.8781437478};
+    auto stats = OnlineStatistics2D();
+
+    // requires C++20 or maybe later
+    for (auto [x, y] : std::views::zip(xvals, yvals)) {
+        stats.Update(x, y);
+    }
+
+/* numpy
+x=[0.5525571237, 0.5412206250, 0.8147993422, 0.1510378701, 0.0560028736, 0.3781311581, 0.5456549605, 0.7874939989, 0.9412896414, 0.8458607057, 0.4717614025, 0.8134554498, 0.8864944719, 0.7353193240, 0.9149073578, 0.6548862363]
+y=[0.6809272480, 0.7048653974, 0.4096884513, 0.5807519821, 0.3463499743, 0.4886715036, 0.8816185354, 0.0855490408, 0.7777406078, 0.0800553042, 0.7257813523, 0.4143589239, 0.8589390266, 0.1811071473, 0.1962093466, 0.8781437478]
+m=np.array([x,y])
+m[0].mean(), m[1].mean()
+m[0].var(), m[1].var(), m[0].var(ddof=1), m[1].var(ddof=1)
+np.cov(m, bias=True)[0][1], np.cov(m, bias=False)[0][1]
+*/
+    REQUIRE_THAT(stats.MeanX(), Catch::Matchers::WithinRel(0.63067953384375));
+    REQUIRE_THAT(stats.MeanY(), Catch::Matchers::WithinRel(0.5181723493375));
+    REQUIRE_THAT(stats.VarianceX(), Catch::Matchers::WithinRel(0.06644511933383913));
+    REQUIRE_THAT(stats.VarianceY(), Catch::Matchers::WithinRel(0.07517831978581213));
+    REQUIRE_THAT(stats.SampleVarianceX(), Catch::Matchers::WithinRel(0.07087479395609507));
+    REQUIRE_THAT(stats.SampleVarianceY(), Catch::Matchers::WithinRel(0.08019020777153293));
+    REQUIRE_THAT(stats.CovarianceXY(), Catch::Matchers::WithinRel(-0.010529283576359396));
+    REQUIRE_THAT(stats.SampleCovarianceXY(), Catch::Matchers::WithinRel(-0.011231235814783356));
+}
+
+
