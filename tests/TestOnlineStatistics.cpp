@@ -36,7 +36,7 @@ TEST_CASE("No data", "[onlinestatics1d]") {
 
 TEST_CASE("Insufficient data", "[onlinestatics1d]") {
     auto stats = OnlineStatistics1D();
-    stats.Update(0.0);
+    stats.Insert(0.0);
     REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(0.0));
     REQUIRE_THAT(stats.Variance(), Catch::Matchers::IsNaN());
     REQUIRE_THAT(stats.SampleVariance(), Catch::Matchers::IsNaN());
@@ -46,7 +46,7 @@ TEST_CASE("Short array of doubles", "[onlinestatics1d]") {
     std::array<double, 5> list = {1.0, 2.0, 3.0, 4.0, 5.0};
     auto stats = OnlineStatistics1D();
     for (auto& x : list) {
-        stats.Update(x);
+        stats.Insert(x);
     }
     REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(3.0));
     REQUIRE_THAT(stats.Variance(), Catch::Matchers::WithinRel(2.0));
@@ -60,7 +60,7 @@ TEST_CASE("Longer array of doubles", "[onlinestatics1d]") {
                                     19.0, 86.0, 40.0, 20.0, 42.0, 93.0, 25.0, 56.0};
     auto stats = OnlineStatistics1D();
     for (auto& x : list) {
-        stats.Update(x);
+        stats.Insert(x);
     }
     REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(46.84375)) ;
     REQUIRE_THAT(stats.Variance(), Catch::Matchers::WithinRel(796.4443359375));
@@ -70,21 +70,21 @@ TEST_CASE("Longer array of doubles", "[onlinestatics1d]") {
 
 TEST_CASE("Incremental stats", "[onlinestatics1d]") {
     auto stats = OnlineStatistics1D();
-    stats.Update(1.0);
+    stats.Insert(1.0);
     REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(1.0));
-    stats.Update(2.0);
+    stats.Insert(2.0);
     REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(1.5));
-    stats.Update(3.0);
+    stats.Insert(3.0);
     REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(2.0));
-    stats.Update(1e13 + 2.0);
+    stats.Insert(1e13 + 2.0);
     REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(2.5e12 + 2.0));
 }
 
 TEST_CASE("removal","[onlinestatics1d]") {
     auto stats = OnlineStatistics1D();
-    stats.Update(1);
-    stats.Update(2);
-    stats.Update(3);
+    stats.Insert(1);
+    stats.Insert(2);
+    stats.Insert(3);
     REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(2.0));
     stats.Remove(3);
     REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(1.5));
@@ -100,7 +100,7 @@ TEST_CASE("removal large array", "[onlinestatics1d]") {
                                     19.0, 86.0, 40.0, 20.0, 42.0, 93.0, 25.0, 56.0};
     auto stats = OnlineStatistics1D();
     for (auto& x : list) {
-        stats.Update(x);
+        stats.Insert(x);
     }
     stats.Remove(56.0);
     REQUIRE_THAT(stats.Mean(), Catch::Matchers::WithinRel(46.54838709677419));
@@ -120,7 +120,7 @@ TEST_CASE("No data", "[onlinestatics2d]") {
 
 TEST_CASE("Insufficient data", "[onlinestatics2d]") {
     auto stats = OnlineStatistics2D();
-    stats.Update(0.0,0.0);
+    stats.Insert(0.0,0.0);
     REQUIRE_THAT(stats.MeanX(), Catch::Matchers::WithinRel(0.0));
     REQUIRE_THAT(stats.MeanY(), Catch::Matchers::WithinRel(0.0));
     REQUIRE_THAT(stats.VarianceX(), Catch::Matchers::IsNaN());
@@ -134,8 +134,8 @@ TEST_CASE("Insufficient data", "[onlinestatics2d]") {
 TEST_CASE("Trivial covariance", "[onlinestatics2d]") {
 
     auto stats = OnlineStatistics2D();
-    stats.Update(1.0, 2.0);
-    stats.Update(2.0, 4.0);
+    stats.Insert(1.0, 2.0);
+    stats.Insert(2.0, 4.0);
     REQUIRE_THAT(stats.CovarianceXY(), Catch::Matchers::WithinRel(0.5));
     REQUIRE_THAT(stats.SampleCovarianceXY(), Catch::Matchers::WithinRel(1.0));
 }
@@ -144,7 +144,7 @@ TEST_CASE("Straight line", "[onlinestatics2d]") {
     std::array<double, 5> list = {1.0, 2.0, 3.0, 4.0, 5.0};
     auto stats = OnlineStatistics2D();
     for (auto& x : list) {
-        stats.Update(x, x);
+        stats.Insert(x, x);
     }
     REQUIRE_THAT(stats.MeanX(), Catch::Matchers::WithinRel(3.0));
     REQUIRE_THAT(stats.MeanY(), Catch::Matchers::WithinRel(3.0));
@@ -164,7 +164,7 @@ TEST_CASE("Not quite straight line", "[onlinestatics2d]") {
 
     // requires C++20 or maybe later
     for (auto [x, y] : std::views::zip(xvals, yvals)) {
-        stats.Update(x, y);
+        stats.Insert(x, y);
     }
 
 /* numpy
@@ -202,7 +202,7 @@ TEST_CASE("Random floats", "[onlinestatics2d]") {
 
     // requires C++20 or maybe later
     for (auto [x, y] : std::views::zip(xvals, yvals)) {
-        stats.Update(x, y);
+        stats.Insert(x, y);
     }
 
 /* numpy
@@ -231,9 +231,9 @@ np.polyfit(x,y,1)
 
 TEST_CASE("removal","[onlinestatics2d]") {
     auto stats = OnlineStatistics2D();
-    stats.Update(1,3);
-    stats.Update(2,2);
-    stats.Update(3,1);
+    stats.Insert(1,3);
+    stats.Insert(2,2);
+    stats.Insert(3,1);
     REQUIRE_THAT(stats.MeanX(), Catch::Matchers::WithinRel(2.0));
     REQUIRE_THAT(stats.MeanY(), Catch::Matchers::WithinRel(2.0));
     stats.Remove(3,1);
@@ -252,7 +252,7 @@ TEST_CASE("Random floats with remove", "[onlinestatics2d]") {
 
     // requires C++20 or maybe later
     for (auto [x, y] : std::views::zip(xvals, yvals)) {
-        stats.Update(x, y);
+        stats.Insert(x, y);
     }
 
     stats.Remove(0.1510378701, 0.5807519821);
@@ -293,7 +293,7 @@ TEST_CASE("Sawtooth", "[onlinestatics2d]") {
 
     // requires C++20 or maybe later
     for (auto [x, y] : std::views::zip(xvals, yvals)) {
-        stats.Update(x, y);
+        stats.Insert(x, y);
     }
 
     int i = 0;

@@ -20,18 +20,18 @@ bool printit(double x) {
 
 int main() {
     OnlineStatistics1D stats = OnlineStatistics1D();
-    stats.Update(1.0);
-    stats.Update(2.0);
-    stats.Update(3.0);
+    stats.Insert(1.0);
+    stats.Insert(2.0);
+    stats.Insert(3.0);
     std::cout << std::format("mean: {:.5f}, variance: {:.5f}\n", stats.Mean(), stats.Variance());
     
     // reset statistics
     stats = OnlineStatistics1D();
     int iters = 30;
-    stats.Update(1.0);
+    stats.Insert(1.0);
     printit(stats.Mean());
     for (int i=0; i<iters; i++) {
-        stats.Update(0.0);
+        stats.Insert(0.0);
         printit(stats.Mean());
     }
     std::cout << std::format("\nexpect: {:.15f}\n", 1.0/31.0);
@@ -51,7 +51,7 @@ int main() {
 
     for (int i = 0; i < iters; ++i) {
         double newval = (double) i + dist(gen);
-        stats2d.Update((double) i, newval);
+        stats2d.Insert((double) i, newval);
         //double slope, intercept;
         const auto [slope, intercept] = bestfit(stats2d);
         std::cout << std::format("update ({:4d}, {:4.6f}), mean={:8.6f}, y = {:8.6f} x + {:8.6f}\n", i, newval, stats2d.MeanY(), slope, intercept);

@@ -30,7 +30,7 @@ private:
 public:
     OnlineStatistics1D();
     virtual ~OnlineStatistics1D(void);
-    int Update(double value);
+    int Insert(double value);
     int Remove(double value);
     double Count(void);
     double Mean(void);
@@ -49,7 +49,7 @@ private:
 public:
     OnlineStatistics2D();
     virtual ~OnlineStatistics2D(void);
-    int Update(double x_value, double y_value);
+    int Insert(double x_value, double y_value);
     int Remove(double x_value, double y_value);
     double Count(void);
     double MeanX(void);

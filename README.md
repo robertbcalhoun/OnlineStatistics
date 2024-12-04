@@ -24,9 +24,9 @@ As of this writing, catch2 version 3.4.0 will be installed.
 
 int main() {
     auto stats = OnlineStatistics1D();
-    stats.Update(1.0);
-    stats.Update(2.0);
-    stats.Update(3.0);
+    stats.Insert(1.0);
+    stats.Insert(2.0);
+    stats.Insert(3.0);
     double mean = stats.Mean();
     double var = stats.Variance();
     std::cout << "mean: " << mean << " var: " << var << std::endl;

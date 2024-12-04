@@ -23,7 +23,7 @@ OnlineStatistics1D::OnlineStatistics1D(void) {
 OnlineStatistics1D::~OnlineStatistics1D(void) {
 }
 
-int OnlineStatistics1D::Update(double value) {
+int OnlineStatistics1D::Insert(double value) {
     ++count;
     double delta = value - mean;
     mean += delta / count;
@@ -84,7 +84,7 @@ OnlineStatistics2D::OnlineStatistics2D() {
 OnlineStatistics2D::~OnlineStatistics2D(void) {
 }
 
-int OnlineStatistics2D::Update(double x_value, double y_value) {
+int OnlineStatistics2D::Insert(double x_value, double y_value) {
     ++count;
     double deltax = x_value - x_mean;
     x_mean += deltax / count;
