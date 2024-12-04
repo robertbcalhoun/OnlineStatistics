@@ -32,6 +32,15 @@ int OnlineStatistics1D::Update(double value) {
     return (int) count;
 }
 
+int OnlineStatistics1D::Remove(double value) {
+    --count;
+    double delta = value - mean;
+    mean -= delta / count;
+    double delta2 = value - mean;
+    m2 -= delta * delta2;
+    return (int) count;
+}
+
 double OnlineStatistics1D::Count(void) {
     return count;
 }
@@ -88,6 +97,23 @@ int OnlineStatistics2D::Update(double x_value, double y_value) {
     mxy += deltax * deltay2;
     m2x += deltax * deltax2;
     m2y += deltay * deltay2;
+
+    return (int) count;
+}
+
+int OnlineStatistics2D::Remove(double x_value, double y_value) {
+    --count;
+    double deltax = x_value - x_mean;
+    x_mean -= deltax / count;
+    double deltax2 = x_value - x_mean;
+    
+    double deltay = y_value - y_mean;
+    y_mean -= deltay / count;
+    double deltay2 = y_value - y_mean;
+
+    mxy -= deltax * deltay2;
+    m2x -= deltax * deltax2;
+    m2y -= deltay * deltay2;
 
     return (int) count;
 }
