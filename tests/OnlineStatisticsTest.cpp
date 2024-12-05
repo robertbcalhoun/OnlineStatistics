@@ -175,6 +175,7 @@ m[0].mean(), m[1].mean()
 m[0].var(), m[1].var(), m[0].var(ddof=1), m[1].var(ddof=1)
 np.cov(m, bias=True)[0][1], np.cov(m, bias=False)[0][1]
 np.polyfit(x,y,1)
+np.linalg.lstsq(np.vstack([x, np.ones(len(x))]).T,y)[0]
 */
 
     REQUIRE_THAT(stats.MeanX(), Catch::Matchers::WithinRel(3.0));
@@ -189,10 +190,10 @@ np.polyfit(x,y,1)
     // Perform linear regression following https://seehuhn.github.io/MATH3714/S01-simple.html
     // Agreement with numpy linalg is a bit worse than other statistics.
     // np.linalg.lstsq(np.vstack([x, np.ones(len(x))]).T,y)[0]
-    double slope = stats.CovarianceXY() / stats.VarianceX();
+    double slope = stats.SampleCovarianceXY() / stats.SampleVarianceX();
     double intercept = stats.MeanY() - slope * stats.MeanX();
-    REQUIRE_THAT(intercept, Catch::Matchers::WithinRel(-0.08001,1e-6));
-    REQUIRE_THAT(slope, Catch::Matchers::WithinRel( 2.02001,1e-6)); 
+    REQUIRE_THAT(intercept, Catch::Matchers::WithinRel(-0.08001,1e-7));
+    REQUIRE_THAT(slope, Catch::Matchers::WithinRel( 2.02001,1e-9)); 
 }
 
 TEST_CASE("Random floats", "[onlinestatics2d]") {
@@ -222,11 +223,6 @@ np.polyfit(x,y,1)
     REQUIRE_THAT(stats.SampleVarianceY(), Catch::Matchers::WithinRel(0.08019020777153293));
     REQUIRE_THAT(stats.CovarianceXY(), Catch::Matchers::WithinRel(-0.010529283576359396));
     REQUIRE_THAT(stats.SampleCovarianceXY(), Catch::Matchers::WithinRel(-0.011231235814783356));
-
-    double slope = stats.CovarianceXY() / stats.VarianceX();
-    double intercept = stats.MeanY() - slope * stats.MeanX();
-    REQUIRE_THAT(intercept, Catch::Matchers::WithinRel( 0.61811353,1e-6));
-    REQUIRE_THAT(slope, Catch::Matchers::WithinRel(-0.15846587,1e-6));
 }
 
 TEST_CASE("removal","[onlinestatics2d]") {
@@ -277,56 +273,142 @@ np.polyfit(x,y,1)
     REQUIRE_THAT(stats.SampleVarianceY(), Catch::Matchers::WithinRel(0.09838112869884236));
     REQUIRE_THAT(stats.CovarianceXY(), Catch::Matchers::WithinRel(-0.015445281777668733));
     REQUIRE_THAT(stats.SampleCovarianceXY(), Catch::Matchers::WithinRel(-0.016849398302911347));
-
-    double slope = stats.CovarianceXY() / stats.VarianceX();
-    double intercept = stats.MeanY() - slope * stats.MeanX();
-    REQUIRE_THAT(intercept, Catch::Matchers::WithinRel( 0.65561436, 1e-6));
-    REQUIRE_THAT(slope, Catch::Matchers::WithinRel(-0.26601833, 1e-6));
 }
 
 
-TEST_CASE("Sawtooth", "[onlinestatics2d]") {
-    // triangle wave; add all 10, then remove first 7, should get slope 1.0 intecept -8.0
-    std::array<double, 10> xvals = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-    std::array<double, 10> yvals = {0.0, 1.0, 2.0, 1.0, 0.0,-1.0,-2.0,-1.0, 0.0, 1.0};  
+/* numpy
+x=[ -1.0, -1.0, 0.0, 0.0, 1.0, 1.0 ]
+y=[ -1.0,  1.0, 0.0, 2.0, 1.0, 3.0 ]
+m=np.array([x,y])
+m[0].mean(), m[1].mean()
+m[0].var(), m[1].var(), m[0].var(ddof=1), m[1].var(ddof=1)
+np.cov(m, bias=True)[0][1], np.cov(m, bias=False)[0][1]
+np.polyfit(x,y,1)
+np.linalg.lstsq(np.vstack([x, np.ones(len(x))]).T,y)[0]
+*/
+TEST_CASE("data with bestfit y = x + 1", "[onlinestatics2d]") {
+    std::array<double, 6> xvals = { -1.0, -1.0, 0.0, 0.0, 1.0, 1.0 };
+    std::array<double, 6> yvals = { -1.0,  1.0, 0.0, 2.0, 1.0, 3.0};
     auto stats = OnlineStatistics2D();
 
     // requires C++20 or maybe later
     for (auto [x, y] : std::views::zip(xvals, yvals)) {
         stats.Insert(x, y);
     }
+    REQUIRE_THAT(stats.MeanX(), Catch::Matchers::WithinAbs(0.0,1e-12));
+    REQUIRE_THAT(stats.MeanY(), Catch::Matchers::WithinRel(1.0));
+    REQUIRE_THAT(stats.VarianceX(), Catch::Matchers::WithinRel(0.6666666666666666));
+    REQUIRE_THAT(stats.VarianceY(), Catch::Matchers::WithinRel(1.6666666666666667));
+    REQUIRE_THAT(stats.SampleVarianceX(), Catch::Matchers::WithinRel(0.8));
+    REQUIRE_THAT(stats.SampleVarianceY(), Catch::Matchers::WithinRel(2.0));
+    REQUIRE_THAT(stats.CovarianceXY(), Catch::Matchers::WithinRel(0.6666666666666666));
+    REQUIRE_THAT(stats.SampleCovarianceXY(), Catch::Matchers::WithinRel(0.8));
 
-    int i = 0;
-    for (auto [x, y] : std::views::zip(xvals, yvals)) {
-        stats.Remove(x, y);
-        ++i;
-        if (i >= 7) break;
-    }
+    double slope = stats.SampleCovarianceXY() / stats.SampleVarianceX();
+    double intercept = stats.MeanY() - slope * stats.MeanX();
+    REQUIRE_THAT(slope, Catch::Matchers::WithinRel(1.0));
+    REQUIRE_THAT(intercept, Catch::Matchers::WithinRel(1.0));
+}
 
-/* numpy
-x=[ 7.0, 8.0, 9.0]
-y=[-1.0, 0.0, 1.0]
+/* numpy 
+rng = np.random.default_rng(12345)
+x = np.array([i + rng.random() - 0.5 for i in range(25)])
+y = np.array([i + rng.random() - 0.5 for i in range(25)])
+>>> x
+array([-0.27266398,  0.81675834,  2.29736546,  3.17625467,  3.89110955,
+        4.83281393,  6.09830875,  6.68673419,  8.17275604,  9.44180287,
+        9.74824571, 11.44888115, 12.16723745, 12.59589794, 13.94183967,
+       15.38647992, 16.1974535 , 16.82647286, 18.23392816, 18.72013496,
+       19.58159457, 20.6598956 , 21.84010018, 22.96519315, 23.76642103])
+>>> y
+array([ 0.3157764 ,  0.69329439,  1.62946908,  2.59166475,  4.09856801,
+        5.3547419 ,  6.10162124,  7.43198836,  8.22478136,  9.36055132,
+       10.4293378 , 11.04618601, 12.43767296, 12.99498794, 13.77377318,
+       14.95177871, 16.16503892, 16.83089093, 18.40345401, 18.75707418,
+       19.83982834, 20.7588534 , 21.85544648, 22.50502233, 24.12860454])
 m=np.array([x,y])
 m[0].mean(), m[1].mean()
 m[0].var(), m[1].var(), m[0].var(ddof=1), m[1].var(ddof=1)
 np.cov(m, bias=True)[0][1], np.cov(m, bias=False)[0][1]
 np.polyfit(x,y,1)
+np.linalg.lstsq(np.vstack([x, np.ones(len(x))]).T,y)[0]
 */
+TEST_CASE("random slope near 1.0", "[onlinestatics2d]") {
+    std::array<double, 25> xvals = {
+        -0.27266398, 0.81675834,  2.29736546,  3.17625467,  3.89110955,
+         4.83281393, 6.09830875,  6.68673419,  8.17275604,  9.44180287,
+         9.74824571, 11.44888115, 12.16723745, 12.59589794, 13.94183967,
+        15.38647992, 16.1974535 , 16.82647286, 18.23392816, 18.72013496,
+        19.58159457, 20.6598956 , 21.84010018, 22.96519315, 23.76642103 };
+    std::array<double, 25> yvals = {
+        0.3157764 ,  0.69329439,  1.62946908,  2.59166475,  4.09856801,
+        5.3547419 ,  6.10162124,  7.43198836,  8.22478136,  9.36055132,
+       10.4293378 , 11.04618601, 12.43767296, 12.99498794, 13.77377318,
+       14.95177871, 16.16503892, 16.83089093, 18.40345401, 18.75707418,
+       19.83982834, 20.7588534 , 21.85544648, 22.50502233, 24.12860454 };
+    auto stats = OnlineStatistics2D();
 
-    REQUIRE_THAT(stats.MeanX(), Catch::Matchers::WithinRel(8.0));
-    REQUIRE_THAT(stats.MeanY(), Catch::Matchers::WithinRel(0.0));
-    REQUIRE_THAT(stats.VarianceX(), Catch::Matchers::WithinRel(0.6666666666666666));
-    REQUIRE_THAT(stats.VarianceY(), Catch::Matchers::WithinRel(0.6666666666666666));
-    REQUIRE_THAT(stats.SampleVarianceX(), Catch::Matchers::WithinRel(1.0));
-    REQUIRE_THAT(stats.SampleVarianceY(), Catch::Matchers::WithinRel(1.0));
-    REQUIRE_THAT(stats.CovarianceXY(), Catch::Matchers::WithinRel(0.6666666666666666));
-    REQUIRE_THAT(stats.SampleCovarianceXY(), Catch::Matchers::WithinRel(1.0));
+    // requires C++20 or maybe later
+    for (auto [x, y] : std::views::zip(xvals, yvals)) {
+        stats.Insert(x, y);
+    }
+    // needing to customize margin, use CHECK_THAT so we keep going
+    CHECK_THAT(stats.MeanX(), Catch::Matchers::WithinRel(11.968840627129982,1e-9));
+    CHECK_THAT(stats.MeanY(), Catch::Matchers::WithinRel(12.027216261969004,1e-9));
+    CHECK_THAT(stats.VarianceX(), Catch::Matchers::WithinRel(51.31807432427908,1e-9));
+    CHECK_THAT(stats.VarianceY(), Catch::Matchers::WithinRel(51.216447073764414,1e-9));
+    CHECK_THAT(stats.SampleVarianceX(), Catch::Matchers::WithinRel(53.45632742112404,1e-9));
+    CHECK_THAT(stats.SampleVarianceY(), Catch::Matchers::WithinRel(53.350465701837926,1e-9));
+    CHECK_THAT(stats.CovarianceXY(), Catch::Matchers::WithinRel(51.19784460521081,1e-9));
+    CHECK_THAT(stats.SampleCovarianceXY(), Catch::Matchers::WithinRel(53.33108813042793,1e-9));
 
-    // Perform linear regression following https://seehuhn.github.io/MATH3714/S01-simple.html
-    // Agreement with numpy linalg is a bit worse than other statistics.
-    // np.linalg.lstsq(np.vstack([x, np.ones(len(x))]).T,y)[0]
-    double slope = stats.CovarianceXY() / stats.VarianceX();
+    double slope = stats.SampleCovarianceXY() / stats.SampleVarianceX();
     double intercept = stats.MeanY() - slope * stats.MeanX();
-    REQUIRE_THAT(slope, Catch::Matchers::WithinRel(1.0));
-    REQUIRE_THAT(intercept, Catch::Matchers::WithinRel(-8.0));
+    CHECK_THAT(slope, Catch::Matchers::WithinRel(0.99765717,1e-7));
+    CHECK_THAT(intercept, Catch::Matchers::WithinRel(0.08641664,1e-6));
 }
+
+
+TEST_CASE("add 31 points, remove 25", "[onlinestatics2d]") {
+    std::array<double, 31> xvals = {
+        -0.27266398, 0.81675834,  2.29736546,  3.17625467,  3.89110955,
+         4.83281393, 6.09830875,  6.68673419,  8.17275604,  9.44180287,
+         9.74824571, 11.44888115, 12.16723745, 12.59589794, 13.94183967,
+        15.38647992, 16.1974535 , 16.82647286, 18.23392816, 18.72013496,
+        19.58159457, 20.6598956 , 21.84010018, 22.96519315, 23.76642103,
+         -1.0, -1.0, 0.0, 0.0, 1.0, 1.0 };
+    std::array<double, 31> yvals = {
+        0.3157764 ,  0.69329439,  1.62946908,  2.59166475,  4.09856801,
+        5.3547419 ,  6.10162124,  7.43198836,  8.22478136,  9.36055132,
+       10.4293378 , 11.04618601, 12.43767296, 12.99498794, 13.77377318,
+       14.95177871, 16.16503892, 16.83089093, 18.40345401, 18.75707418,
+       19.83982834, 20.7588534 , 21.85544648, 22.50502233, 24.12860454,
+        -1.0,  1.0, 0.0, 2.0, 1.0, 3.0 };
+    auto stats = OnlineStatistics2D();
+
+    // requires C++20 or maybe later
+    for (auto [x, y] : std::views::zip(xvals, yvals)) {
+        stats.Insert(x, y);
+    }
+    int i = 0;
+    for (auto [x, y] : std::views::zip(xvals, yvals)) {
+        stats.Remove(x, y);
+        ++i;
+        if (i >= 25) break;
+    }
+    CHECK_THAT(stats.MeanX(), Catch::Matchers::WithinAbs(0.0,1e-10));
+    CHECK_THAT(stats.MeanY(), Catch::Matchers::WithinRel(1.0,1e-9));
+    CHECK_THAT(stats.VarianceX(), Catch::Matchers::WithinRel(0.6666666666666666,1e-9));
+    CHECK_THAT(stats.VarianceY(), Catch::Matchers::WithinRel(1.6666666666666667,1e-9));
+    CHECK_THAT(stats.SampleVarianceX(), Catch::Matchers::WithinRel(0.8,1e-9));
+    CHECK_THAT(stats.SampleVarianceY(), Catch::Matchers::WithinRel(2.0,1e-9));
+    CHECK_THAT(stats.CovarianceXY(), Catch::Matchers::WithinRel(0.6666666666666666,1e-9));
+    CHECK_THAT(stats.SampleCovarianceXY(), Catch::Matchers::WithinRel(0.8,1e-9));
+
+    double slope = stats.SampleCovarianceXY() / stats.SampleVarianceX();
+    double intercept = stats.MeanY() - slope * stats.MeanX();
+    CHECK_THAT(slope, Catch::Matchers::WithinRel(1.0,1e-9));
+    CHECK_THAT(intercept, Catch::Matchers::WithinRel(1.0,1e-9));
+}
+
+
