@@ -26,7 +26,7 @@ target_include_directories(OnlineStatistics PUBLIC "include")
 find_package(Catch2 3 REQUIRED)
 
 # test
-SET(sources_test tests/TestOnlineStatistics.cpp)
+SET(sources_test tests/OnlineStatisticsTest.cpp)
 add_executable(tests ${sources_test})
 target_link_libraries(tests PRIVATE OnlineStatistics Catch2::Catch2WithMain)
 
