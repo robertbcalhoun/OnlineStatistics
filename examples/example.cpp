@@ -24,7 +24,9 @@ int main() {
     stats.Insert(2.0);
     stats.Insert(3.0);
     std::cout << std::format("mean: {:.5f}, variance: {:.5f}\n", stats.Mean(), stats.Variance());
-    
+    stats.Remove(2.0);
+    std::cout << std::format("mean: {:.5f}, variance: {:.5f}\n", stats.Mean(), stats.Variance());
+
     // reset statistics
     stats = OnlineStatistics1D();
     int iters = 30;
